@@ -1,3 +1,6 @@
+**/__pycache__
 AGD20K
 checkpoints
 !checkpoints/.gitkeep
+**.t7
+save_preds

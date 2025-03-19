@@ -25,7 +25,7 @@ parser.add_argument('--num_workers', type=int, default=8)
 parser.add_argument("--test_batch_size", type=int, default=1)
 parser.add_argument('--test_num_workers', type=int, default=8)
 parser.add_argument('--gpu', type=str, default='0')
-parser.add_argument('--viz', action='store_true', default=False)
+parser.add_argument('--viz', action='store_true', default=True)
 
 args = parser.parse_args()
 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
         cluster_sim_maps = []
         ego_pred = np.array(ego_pred.squeeze().data.cpu())
         ego_pred = normalize_map(ego_pred, args.crop_size)
-
+        
         names = mask_path[0].split("/")
         key = names[-3] + "_" + names[-2] + "_" + names[-1]
         GT_mask = GT_masks[key]
