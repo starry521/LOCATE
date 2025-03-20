@@ -6,12 +6,12 @@ import torch
 import numpy as np
 from models.locate import Net as model
 from utils.viz import viz_pred_test
-from utils.util import set_seed, process_gt, normalize_map, overlay_mask
+from utils.util import set_seed, process_gt, normalize_map
 from utils.evaluation import cal_kl, cal_sim, cal_nss
 from data.datatest import TestData
 import torch.utils.data
-from PIL import Image
-from matplotlib import pyplot as plt
+from yacs.config import CfgNode as CN
+from Utils import *
 
 class LOCATE:
     def __init__(self, cfg):
@@ -22,7 +22,7 @@ class LOCATE:
         
         # init model
         self.model = model(aff_classes=self.cfg.num_classes).cuda()
-        assert os.path.exists(self.cfg.model_file), "模型文件不存在"
+        assert os.path.exists(self.cfg.model_file), "model file not found!"
         self.model.load_state_dict(torch.load(self.cfg.model_file))
         self.model.eval()
         
@@ -104,21 +104,6 @@ class LOCATE:
             # viz
             if self.cfg.viz:
                 img_name = key.split(".")[0]
-                # mean = torch.as_tensor([0.485, 0.456, 0.406], dtype=image.dtype, device=image.device).view(-1, 1, 1)
-                # std = torch.as_tensor([0.229, 0.224, 0.225], dtype=image.dtype, device=image.device).view(-1, 1, 1)
-                # mean = mean.view(-1, 1, 1)
-                # std = std.view(-1, 1, 1)
-                # img = image.squeeze(0) * std + mean
-                # img = img.detach().cpu().numpy() * 255
-                # img = Image.fromarray(img.transpose(1, 2, 0).astype(np.uint8))
-                
-                # ego_pred = Image.fromarray(ego_pred)
-                # ego_pred = overlay_mask(img, ego_pred, alpha=0.5)
-                # plt.imshow(ego_pred)
-                # os.makedirs(os.path.join(self.cfg.save_path, 'viz_test'), exist_ok=True)
-                # fig_name = os.path.join(self.cfg.save_path, 'viz_test', img_name + '.jpg')
-                # plt.savefig(fig_name)
-                # plt.close()
                 viz_pred_test(
                     self.cfg, image, ego_pred, GT_mask, 
                     self.aff_list, label, img_name
@@ -133,20 +118,37 @@ class LOCATE:
         return results
 
 
-if __name__ == '__main__':
-    # config
-    class Config:
-        data_root = './AGD20K/'
-        model_file = './checkpoints/best_seen.pth'
-        save_path = './save_preds'
-        divide = "Seen"
-        crop_size = 224
-        resize_size = 256
-        test_batch_size = 1
-        test_num_workers = 8
-        viz = True
+# if __name__ == '__main__':
+#     # config
+#     class Config:
+#         data_root = './AGD20K/'
+#         model_file = './checkpoints/best_seen.pth'
+#         save_path = './save_preds'
+#         divide = "Seen"
+#         crop_size = 224
+#         resize_size = 256
+#         test_batch_size = 1
+#         test_num_workers = 8
+#         viz = True
     
-    cfg = Config()
-    locator = LOCATE(cfg)
-    metrics = locator.predict()
+#     cfg = Config()
+#     locator = LOCATE(cfg)
+#     metrics = locator.predict()
+#     print(f"KLD = {metrics['KLD']}\nSIM = {metrics['SIM']}\nNSS = {metrics['NSS']}")
+
+if __name__ == "__main__":
+
+    # set work dir to AnyGrasp
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+    input = Submodule()
+    pkl_file = os.path.abspath("./data.pkl")
+    input.deserialize(pkl_file)
+
+    locate_cfg = input.get("locate_cfg", CN)
+
+    locate = LOCATE(locate_cfg)
+    metrics = locate.predict()
+
+    input.clear()
     print(f"KLD = {metrics['KLD']}\nSIM = {metrics['SIM']}\nNSS = {metrics['NSS']}")
