@@ -138,7 +138,7 @@ class LOCATE:
 
 if __name__ == "__main__":
 
-    # set work dir to AnyGrasp
+    # set work dir to LOCATE
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     input = Submodule()
